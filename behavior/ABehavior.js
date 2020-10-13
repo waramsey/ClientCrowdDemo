@@ -33,8 +33,6 @@ class ABehavior {
         this.crowd = crowd;
         this.msec = msec;
 
-        this.mainBehavior();
-
         return this.checkEndOfSimulation();
 
     }
