@@ -268,9 +268,6 @@
       mouse = new THREE.Vector2();
       camera = new THREE.PerspectiveCamera(45, 1, 1, 1000);
       camera.position.set(70, 70, 70);
-      // camera.position.set(70, 0, 0); //on the southern side at ground level (enterance)
-      // camera.position.set(0, 70, 0); //directly above
-      // camera.position.set(0, 0, 70); //on the western side at ground level
       camera.lookAt(0, 0, 0)
       // camera.lookAt
       scene = new THREE.Scene();
@@ -284,23 +281,6 @@
       scene.add(camera);
 
       agentGroup = new THREE.Group();
-
-
-
-      loader.load('./models/WalkingDoctor.glb', function (gltf) {
-        gltf.scene.position.set(2,0,0)
-        // mixer.push(new THREE.AnimationMixer(gltf.scene));
-        // let action = mixer[mixer.length - 1].clipAction(gltf.animations[0]);
-        // action.play();
-        
-        gltf.scene.rotation.y = Math.PI;
-        scene.add(gltf.scene);
-      }, undefined, function(error) {
-        console.error(error);
-      });
-
-
-
 
       controls = new OrbitControls(
         camera, renderer.domElement
@@ -326,7 +306,10 @@
       if (CrowdSimApp.agents.length > 0 && !initialized) { //needed to be in draw() for CrowdSimApp.agents.length to function
         for (let i = 0; i < CrowdSimApp.agents.length; i++) {
           loader.load('./models/WalkingDoctor.glb', function (gltf) {
-            gltf.scene.position.set(0,0,0);
+            let xyz = CrowdSimApp.agents[i].getStart();
+            gltf.scene.position.set(xyz[0], xyz[1], xyz[2]);
+            positionArray.push([new THREE.Vector3(xyz[0], xyz[1], xyz[2]), 0.0]);
+            
             mixer.push(new THREE.AnimationMixer(gltf.scene));
             let action = mixer[mixer.length - 1].clipAction(gltf.animations[0]);
             action.play();
@@ -336,7 +319,6 @@
           }, undefined, function(error) {
             console.error(error);
           });
-          positionArray.push([new THREE.Vector3(0,0,0), 0.0]);
         }
         initialized = true;
       }
@@ -359,14 +341,16 @@
         
         let nextPosition = new THREE.Vector3(x, y, z);
         let positionChange = nextPosition.sub(positionArray[j][0]);
-        // let nextAngle = (Math.tan(positionChange.z / positionChange.x));
-        let nextAngle = angleAlpha * (Math.tan(positionArray[j][0].z / positionArray[j][0].x) * 2 * Math.PI)
-          + (1 - angleAlpha) * (Math.tan(positionChange.z / positionChange.x) * 2 * Math.PI);
+        if (j == 0)
+          console.log(positionChange)
+        let nextAngle = (Math.tan(positionChange.z / positionChange.x) * Math.PI);
+        // let nextAngle = angleAlpha * (Math.tan(positionArray[j][0].z / positionArray[j][0].x) * 2 * Math.PI)
+        //   + (1 - angleAlpha) * (Math.tan(positionChange.z / positionChange.x) * 2 * Math.PI);
         modelArray[j].rotation.y = (-nextAngle - positionArray[j][1]) / 2;
-        // modelArray[j].rotation.y = nextAngle;
+        // modelArray[j].rotation.y = -nextAngle;
         positionArray[j][0] = nextPosition;
         positionArray[j][1] = nextAngle;
-        console.log(positionArray[0][1])
+        // console.log(positionArray[4][1])
       }
       timerID = setTimeout(tick, 33);
     }
