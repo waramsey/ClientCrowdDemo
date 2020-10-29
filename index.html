@@ -217,6 +217,7 @@
     let mixer = [];
     let modelArray = [];
     let positionArray = [];
+    let animations = [];
     let initialized = false;
     let angleAlpha = 0.0;
 
@@ -299,20 +300,19 @@
     }
     
     function draw() {
-      // scene.remove(agentGroup);
-      // agentGroup = new THREE.Group();
-      // scene.add(agentGroup);
-
       if (CrowdSimApp.agents.length > 0 && !initialized) { //needed to be in draw() for CrowdSimApp.agents.length to function
         for (let i = 0; i < CrowdSimApp.agents.length; i++) {
-          loader.load('./models/WalkingDoctor.glb', function (gltf) {
+          loader.load('./models/doctor.glb', function (gltf) {
             let xyz = CrowdSimApp.agents[i].getStart();
             gltf.scene.position.set(xyz[0], xyz[1], xyz[2]);
             positionArray.push([new THREE.Vector3(xyz[0], xyz[1], xyz[2]), 0.0]);
-            
+
             mixer.push(new THREE.AnimationMixer(gltf.scene));
-            let action = mixer[mixer.length - 1].clipAction(gltf.animations[0]);
-            action.play();
+            let idleAction = mixer[mixer.length - 1].clipAction(gltf.animations[0]).play();
+            let walkAction = mixer[mixer.length - 1].clipAction(gltf.animations[1]).play();
+            animations.push([idleAction, walkAction]);
+
+            gltf.scene.visible = false;
             
             modelArray.push(gltf.scene);
             scene.add(gltf.scene);
@@ -329,29 +329,33 @@
         let agent = CrowdSimApp.agents[j]; //Grab each agent in the list
 
         //Ignore agents that have come into the simulation and exited
-        if (agent.hasEntered && !agent.inSimulation) continue;
+        if (agent.hasEntered && !agent.inSimulation) {
+          modelArray[j].visible = false;
+          continue;
+        }
         if (!agent.hasEntered) continue;
 
+        modelArray[j].visible = true;
 
+        //update the agent model's position
         let idx = CrowdSimApp.agents[j].idx;
         let x = app.crowd.getAgent(idx).npos[0];
         let y = app.crowd.getAgent(idx).npos[1];
         let z = app.crowd.getAgent(idx).npos[2];
         modelArray[j].position.set(x,y,z);
         
+        //Calculate and apply a rotation for the agent based on the direction it is moving in
         let nextPosition = new THREE.Vector3(x, y, z);
         let previousPosition = positionArray[j][0];
         let positionChange = new THREE.Vector3(nextPosition.x - previousPosition.x, nextPosition.y-previousPosition.y, nextPosition.z - previousPosition.z);
-        if (j == 0)
-          console.log(positionChange)
-          let nextAngle = (Math.atan2(positionChange.z, positionChange.x));
-        // let nextAngle = angleAlpha * (Math.tan(positionArray[j][0].z / positionArray[j][0].x) * 2 * Math.PI)
-        //   + (1 - angleAlpha) * (Math.tan(positionChange.z / positionChange.x) * 2 * Math.PI);
+        let nextAngle = (Math.atan2(positionChange.z, positionChange.x));
         modelArray[j].rotation.y = Math.PI/2 - nextAngle;
-        // modelArray[j].rotation.y = -nextAngle;
         positionArray[j][0] = nextPosition;
         positionArray[j][1] = nextAngle;
-        // console.log(positionArray[4][1])
+
+        //Weight the idle and walking animations based on the speed of the agent
+        animations[j][0].weight = 1 - positionChange.length() * 10;
+        animations[j][1].weight = positionChange.length() * 10;
       }
       timerID = setTimeout(tick, 33);
     }
