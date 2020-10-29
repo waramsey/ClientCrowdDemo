@@ -340,13 +340,14 @@
         modelArray[j].position.set(x,y,z);
         
         let nextPosition = new THREE.Vector3(x, y, z);
-        let positionChange = nextPosition.sub(positionArray[j][0]);
+        let previousPosition = positionArray[j][0];
+        let positionChange = new THREE.Vector3(nextPosition.x - previousPosition.x, nextPosition.y-previousPosition.y, nextPosition.z - previousPosition.z);
         if (j == 0)
           console.log(positionChange)
-        let nextAngle = (Math.tan(positionChange.z / positionChange.x) * Math.PI);
+          let nextAngle = (Math.atan2(positionChange.z, positionChange.x));
         // let nextAngle = angleAlpha * (Math.tan(positionArray[j][0].z / positionArray[j][0].x) * 2 * Math.PI)
         //   + (1 - angleAlpha) * (Math.tan(positionChange.z / positionChange.x) * 2 * Math.PI);
-        modelArray[j].rotation.y = (-nextAngle - positionArray[j][1]) / 2;
+        modelArray[j].rotation.y = Math.PI/2 - nextAngle;
         // modelArray[j].rotation.y = -nextAngle;
         positionArray[j][0] = nextPosition;
         positionArray[j][1] = nextAngle;
