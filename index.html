@@ -246,12 +246,6 @@
 
     });
 
-    // loader1.load('../nav_test_big.obj', function (obj) {
-
-    //   object1 = obj;
-
-    // });
-
     function main() {
 
       geometry = new THREE.CylinderGeometry(.2, .2, 1, 8);
@@ -300,7 +294,8 @@
     }
     
     function draw() {
-      if (CrowdSimApp.agents.length > 0 && !initialized) { //needed to be in draw() for CrowdSimApp.agents.length to function
+      //needed to be in draw() for CrowdSimApp.agents.length to function
+      if (CrowdSimApp.agents.length > 0 && !initialized) {
         for (let i = 0; i < CrowdSimApp.agents.length; i++) {
           loader.load('./models/doctor.glb', function (gltf) {
             let xyz = CrowdSimApp.agents[i].getStart();
@@ -366,7 +361,6 @@
 
 
     function update() {
-
       app.tick();
     }
 
